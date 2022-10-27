@@ -1,0 +1,63 @@
+esphome:
+  name: sensores-acuaponia-d1mini
+  platform: ESP8266
+  board: d1_mini
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+
+ota:
+  password: "b382992bf0af95be724ca3386c47306b"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Caudalimetro-Invernadero-D1Mini"
+    password: "fGCzEC1Wv7OJ"
+
+captive_portal:
+
+dallas:
+  pin: D5
+
+sensor:
+  - platform: pulse_counter
+    pin:
+      number: D2
+    name: "Caudal"
+    update_interval: 5s
+    filters:
+    - lambda: return (x / 12.0);
+    unit_of_measurement: "L/m"
+  - platform: dht
+    pin:
+      number: D6
+    model: DHT22
+    temperature:
+      name: "Temperatura Invernadero"
+    humidity:
+      name: "Humedad Invernadero"
+    update_interval: 300s
+  - platform: dallas
+    address: 0xf2062140c0cf6628
+    name: "Temperatura Agua Tanque"
+
+binary_sensor:
+  - platform: gpio
+    name: "Rotofiltro Lleno"
+    pin:
+      number: D7
+      mode: INPUT_PULLUP
+    filters:
+      - delayed_on_off: 2000ms
+    device_class: moisture
+
+switch:
+  - platform: restart
+    name: "Reiniciar Sensores"

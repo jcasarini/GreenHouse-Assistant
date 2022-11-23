@@ -1,0 +1,123 @@
+esp32:
+  board: nodemcu-32s
+  framework:
+    type: arduino
+    
+esphome:
+  name: control-bombas-old
+
+# Enable logging
+#logger:
+
+api:
+  reboot_timeout: 60s
+
+ota:
+  safe_mode: false
+  password: "052ec2e05b7e7807b7b359167881e5ed"
+
+wifi:
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+#  ssid: 
+#  password: zaqxswcde
+  ssid: "Acuaponia"
+  password: "H1dr0p0n14!"
+  
+  ap:
+    ssid: "Test-Invernadero"
+    password: "12345678"
+
+#dallas:
+#  pin: GPIO21
+
+#sensor:
+#  - platform: dallas
+#    address: 0xf2062140c0cf6628
+#    name: "Temperatura Agua Tanque"
+
+binary_sensor:
+#  - platform: gpio
+#    name: "Pileta"
+#    pin:
+#      number: 19
+#      mode: INPUT_PULLUP
+#      inverted: true
+#    device_class: moisture
+#    id: sensor_pileta
+#    filters:
+#      - delayed_on_off: 2000ms
+#  - platform: gpio
+#    name: "Vacío"
+#    pin:
+#      number: 18
+#      mode: INPUT_PULLUP
+#      inverted: true
+#    filters:
+#      - delayed_on_off: 2000ms
+#    device_class: moisture
+#    id: sensor_apagado
+  - platform: gpio
+    name: "Lleno"
+    pin:
+      number: 17
+      mode: INPUT_PULLUP
+    filters:
+      - delayed_on_off: 2000ms
+    device_class: moisture
+    id: sensor_encendido
+
+#  - platform: gpio
+#    name: "Boton 1"
+#    pin:
+#      number: 4
+#      mode: INPUT_PULLUP
+#      inverted: true
+#    filters:
+#      - delayed_on: 250ms
+#    on_press:
+#        - switch.turn_on: switch_bomba_limpieza
+#    on_release:
+#        - switch.turn_off: switch_bomba_limpieza
+#  - platform: gpio
+#    name: "Boton 2"
+#    pin:
+#      number: 22
+#      mode: INPUT_PULLUP
+#      inverted: true
+#    filters:
+#      - delayed_on: 250ms
+#    on_press:
+#        - switch.turn_on: switch_cilindro
+#    on_release:
+#        - switch.turn_off: switch_cilindro
+#  - platform: gpio
+#    name: "Boton 3"
+#    id: boton3
+#    pin:
+#      number: 33
+#      mode: INPUT_PULLUP
+#      inverted: true
+#    filters:
+#      - delayed_on: 250ms
+
+switch:
+  - platform: gpio
+    pin: 25
+    name: "Bomba Limpieza"
+    id: switch_bomba_limpieza
+    inverted: true
+    restore_mode: ALWAYS_OFF
+  - platform: gpio
+    pin: 26
+    name: "Motor Cilindro"
+    id: switch_cilindro
+    inverted: true
+    restore_mode: ALWAYS_OFF
+  - platform: gpio
+    pin: 27
+    name: "Bomba Pileta"
+    id: switch_bomba_pileta
+    inverted: true
+    restore_mode: ALWAYS_OFF
+  - platform: restart
+    name: "Reiniciar controladora"

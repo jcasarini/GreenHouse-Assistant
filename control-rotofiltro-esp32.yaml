@@ -1,0 +1,183 @@
+sp32:
+  board: nodemcu-32s
+  framework:
+    type: arduino
+    
+esphome:
+  name: control-rotofiltro
+  on_boot:
+    then:
+    - delay: 20s
+    - script.execute: action
+    - logger.log: "Running scripts..."
+
+# Enable logging
+logger:
+
+api:
+  reboot_timeout: 0s
+
+web_server:
+  port: 80
+
+ota:
+  safe_mode: false
+  password: "052ec2e05b7e7807b7b359167881e5ed"
+
+wifi:
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+#  ssid: 
+#  password: zaqxswcde
+  ssid: "SSID"
+  password: "PWD"
+  
+  ap:
+    ssid: "Test-Invernadero"
+    password: "12345678"
+  reboot_timeout: 0s
+
+globals:
+#  - id: limpiar
+#    type: boolean
+#    initial_value: "false"
+  - id: counter
+    type: int
+    initial_value: '1'
+
+
+#dallas:
+#  pin: GPIO21
+
+#sensor:
+#  - platform: dallas
+#    address: 0xf2062140c0cf6628
+#    name: "Temperatura Agua Tanque"
+
+binary_sensor:
+  - platform: gpio
+    name: "Lleno"
+    pin:
+      number: 19
+      mode: INPUT_PULLUP
+      inverted: true
+    device_class: moisture
+    id: sensor_encendido
+    filters:
+      - delayed_on_off: 5000ms
+#    on_press:
+#        - switch.turn_on: switch_bomba_limpieza
+#        - switch.turn_on: switch_cilindro
+#        - delay: 30s
+#        - switch.turn_off: switch_bomba_limpieza
+#        - switch.turn_off: switch_cilindro
+      
+  - platform: gpio
+    name: "Vacío"
+    pin:
+      number: 18
+      mode: INPUT_PULLUP
+      inverted: true
+    filters:
+      - delayed_on_off: 5000ms
+    device_class: moisture
+    id: sensor_apagado
+#   on_release:
+#      then:
+#        - switch.turn_off: switch_bomba_limpieza
+#        - switch.turn_off: switch_cilindro
+
+  - platform: gpio
+    name: "Apagado Pileta"
+    pin:
+      number: 17
+      mode: INPUT_PULLUP
+      inverted: true
+    filters:
+      - delayed_on_off: 5000ms
+    device_class: moisture
+    id: sensor_apagado_pileta
+#    on_release:
+#        - switch.turn_on: switch_bomba_pileta
+  - platform: gpio
+    name: "Boton 1"
+    pin:
+      number: 4
+      mode: INPUT_PULLUP
+      inverted: true
+    on_press:
+        - switch.turn_on: switch_bomba_limpieza
+    on_release:
+        - switch.turn_off: switch_bomba_limpieza
+  - platform: gpio
+    name: "Boton 2"
+    pin:
+      number: 22
+      mode: INPUT_PULLUP
+      inverted: true
+    on_press:
+        - switch.turn_on: switch_cilindro
+    on_release:
+        - switch.turn_off: switch_cilindro
+  - platform: gpio
+    name: "Boton 3"
+    id: boton3
+    pin:
+      number: 33
+      mode: INPUT_PULLUP
+      inverted: true
+
+switch:
+  - platform: gpio
+    pin: 25
+    name: "Bomba Limpieza"
+    id: switch_bomba_limpieza
+    inverted: true
+    restore_mode: ALWAYS_OFF
+  - platform: gpio
+    pin: 26
+    name: "Motor Cilindro"
+    id: switch_cilindro
+    inverted: true
+    restore_mode: ALWAYS_OFF
+  - platform: gpio
+    pin: 27
+    name: "Bomba Pileta"
+    id: switch_bomba_pileta
+    inverted: true
+    
+script:
+  - id: action
+    then:
+    - while:
+        condition:
+          lambda: "return true;"
+        then:
+          - if:
+              condition:
+                lambda: |-
+                  if (id(counter) < 3) {
+                    return true;
+                  } else {
+                    return false;
+                  }
+              then:
+                 - switch.turn_on: switch_cilindro
+                 - delay: 2000ms
+                 - switch.turn_off: switch_cilindro
+                 - lambda: "id(counter) += 1;"
+                 - logger.log:
+                     format: "Sali sin limpiar. Pasada número %i"
+                     args: ['id(counter)']
+              else:
+                 - switch.turn_on: switch_cilindro
+                 - switch.turn_on: switch_bomba_limpieza
+                 - delay: 12s
+                 - switch.turn_off: switch_cilindro
+                 - switch.turn_off: switch_bomba_limpieza
+                 - globals.set:
+                     id: counter
+                     value: "1"
+                 - logger.log:
+                    format: "Sali de limpiar. El contador volvio a %i"
+                    args: ['id(counter)']
+          - delay: 60s
